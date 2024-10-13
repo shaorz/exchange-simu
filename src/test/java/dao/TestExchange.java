@@ -6,13 +6,14 @@ import org.rogersf.listeners.ExchangeListener;
 import org.rogersf.locking.Exchange;
 
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class TestExchange extends Exchange {
 	public TestExchange () {
 	}
 
 	public TestExchange ( List < ExchangeListener > ls ) {
-		super ( ls );
+		super ( ls , new ArrayBlockingQueue <> ( 10 ) );
 	}
 
 	public long buy ( FixedPrice price , int quantity , String orderId ) {

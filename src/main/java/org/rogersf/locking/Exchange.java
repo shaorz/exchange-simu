@@ -9,28 +9,41 @@ import org.rogersf.listeners.OrderBookListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.*;
 
 public class Exchange {
-	public ConcurrentHashMap < String, OrderBook > books;
-	public ConcurrentSkipListMap < Long, Order > allOrders;
-	private List < ExchangeListener > listeners;
+	public final ConcurrentHashMap < String, OrderBook > books;
+	public final ConcurrentSkipListMap < Long, Order > allOrders;
+	private final List < ExchangeListener > listeners;
+	private final ArrayBlockingQueue < Order > inOrders;
+	private final ExecutorService executor;
 	private static long id = 0;
 
 	public Exchange () {
-		this ( new ArrayList <> () );
+		this ( new ArrayList <> () , new ArrayBlockingQueue < Order > ( 0 ) );
 	}
 
-	public Exchange ( List < ExchangeListener > listeners ) {
+	public Exchange ( final List < ExchangeListener > listeners , final ArrayBlockingQueue < Order > in ) {
 		this.listeners = listeners;
 		books = new ConcurrentHashMap <> ();
 		allOrders = new ConcurrentSkipListMap <> ();
+		inOrders = in;
+		executor = Executors.newFixedThreadPool ( 5 );
 	}
 
-	private long nextOrderId () {
+	public long nextOrderId () {
 		id += 1;
 		return id;
+	}
+
+	public void start () {
+		executor.submit ( () -> {
+			while ( true ) {
+				Order in = inOrders.poll ();
+				long idNew = insertOrder ( in.ticker , in.price , in.quantity , in.side , in.orderId , in.orderType );
+				System.out.println ( "Order processed: " + idNew );
+			}
+		} );
 	}
 
 	private synchronized long insertOrder ( String ticker , FixedPrice price , int quantity , Order.Side side , String orderId , Order.OrderType type ) {

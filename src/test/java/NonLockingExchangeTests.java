@@ -19,8 +19,8 @@ import java.util.concurrent.Executors;
 
 public class NonLockingExchangeTests {
 
-	private static final int BROKER_COUNT = 100;
-	private static final int RB_SIZE = 1024 * 16;
+	public static final int BROKER_COUNT = 10;
+	public static final int RB_SIZE = 1024 * 16;
 
 	@Test
 	public void testNonLockingExchange () throws InterruptedException {
@@ -49,14 +49,26 @@ public class NonLockingExchangeTests {
 		RingBuffer < Order > ringBuffer = disruptor.getRingBuffer ();
 
 		long start = System.currentTimeMillis ();
-		for ( int i = 0 ; i < RB_SIZE ; i++ ) {
+		for ( int i = 0 ; i < BROKER_COUNT ; i++ ) {
 			final int index = i;
 			new Thread ( new Runnable () {
 				@Override
 				public void run () {
 					NonLockingBroker b = new NonLockingBroker ( ringBuffer , "Broker" + index );
-					for ( int orderC = 0 ; orderC < 10_000 ; orderC += 10 ) {
-						b.buy ( "test" , new FixedPrice ( 100 + new Random ().nextDouble () * 10 ) , 100 , "testOrder" + index );
+					if ( index % 2 == 0 ) {
+						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
+							b.buy ( "test" , new FixedPrice ( 100 + new Random ().nextDouble () * 10 ) , 100 , "testOrder" + index );
+						}
+						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
+							b.marketSell ( "test" , 100 , "testSellMarketOrder" + index );
+						}
+					} else {
+						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
+							b.marketSell ( "test" , 100 , "testSellMarketOrder" + index );
+						}
+						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
+							b.buy ( "test" , new FixedPrice ( 100 + new Random ().nextDouble () * 10 ) , 100 , "testOrder" + index );
+						}
 					}
 				}
 			} ).start ();
@@ -83,11 +95,13 @@ public class NonLockingExchangeTests {
 //		latch.await ();
 //		// Shut down the thread pool
 //		executorService.shutdown ();
-		while ( testExchange.nextOrderId () <= 1000_000 ) {
+		while ( testExchange.nextOrderId () <= 100_000 ) {
 			Thread.sleep ( 10 );
 		}
 		long end = System.currentTimeMillis ();
-		System.out.println ( " 1M single threaded buy and sell was matched within " + ( end - start ) + " milli seconds" );
+		System.out.println ( " 1M buy and sell was matched within " + ( end - start ) + " milli seconds in disruptor" );
+
+		Thread.sleep ( 10000 );
 
 	}
 

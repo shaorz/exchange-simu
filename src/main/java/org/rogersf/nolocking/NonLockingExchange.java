@@ -16,6 +16,7 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class NonLockingExchange implements EventHandler < Order > {
+
 	public HashMap < String, OrderBook > books;
 	public TreeMap < Long, Order > allOrders;
 	private List < ExchangeListener > listeners;

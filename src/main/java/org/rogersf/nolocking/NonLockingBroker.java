@@ -1,11 +1,12 @@
 package org.rogersf.nolocking;
 
 import com.lmax.disruptor.RingBuffer;
+import org.rogersf.core.AbstractBroker;
 import org.rogersf.core.FixedPrice;
 import org.rogersf.core.IBroker;
 import org.rogersf.core.Order;
 
-public class NonLockingBroker implements IBroker {
+public class NonLockingBroker extends AbstractBroker {
 	private final RingBuffer < Order > exchangeRing;
 	private final String name;
 
@@ -14,7 +15,8 @@ public class NonLockingBroker implements IBroker {
 		name = n;
 	}
 
-	private long insertOrder ( final String ticker , final FixedPrice price , final int quantity , final Order.Side side , final String orderId , final Order.OrderType type ) {
+	@Override
+	public long insertOrder ( final String ticker , final FixedPrice price , final int quantity , final Order.Side side , final String orderId , final Order.OrderType type ) {
 		long seq = exchangeRing.next ();
 		try {
 			Order o = exchangeRing.get ( seq );
@@ -33,32 +35,4 @@ public class NonLockingBroker implements IBroker {
 		}
 		return seq;
 	}
-
-	@Override
-	public long buy ( String instrument , FixedPrice price , int quantity , String orderId ) {
-		return insertOrder ( instrument , price , quantity , Order.Side.BUY , orderId , Order.OrderType.LIMIT );
-	}
-
-	@Override
-	public long marketBuy ( String instrument , int quantity , String orderId ) {
-		return insertOrder ( instrument , FixedPrice.MAX , quantity , Order.Side.BUY , orderId , Order.OrderType.MARKET );
-	}
-
-	@Override
-	public long sell ( String instrument , FixedPrice price , int quantity , String orderId ) {
-		return insertOrder ( instrument , price , quantity , Order.Side.SELL , orderId , Order.OrderType.LIMIT );
-	}
-
-	@Override
-	public long marketSell ( String instrument , int quantity , String orderId ) {
-		return insertOrder ( instrument , FixedPrice.ZERO , quantity , Order.Side.SELL , orderId , Order.OrderType.MARKET );
-	}
-
-	// TODO implement cancel
-	@Override
-	public int cancel ( long exchangeId ) {
-		System.out.println ( "Broker right now can't cancel order yet" );
-		return 0;
-	}
-
 }
