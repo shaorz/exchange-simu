@@ -28,7 +28,7 @@ public class Exchange {
 		books = new ConcurrentHashMap <> ();
 		allOrders = new ConcurrentSkipListMap <> ();
 		inOrders = in;
-		executor = Executors.newFixedThreadPool ( 5 );
+		executor = Executors.newSingleThreadExecutor ();
 	}
 
 	public long nextOrderId () {
@@ -46,7 +46,7 @@ public class Exchange {
 		} );
 	}
 
-	private synchronized long insertOrder ( String ticker , FixedPrice price , int quantity , Order.Side side , String orderId , Order.OrderType type ) {
+	private long insertOrder ( String ticker , FixedPrice price , int quantity , Order.Side side , String orderId , Order.OrderType type ) {
 		OrderBook orderBook;
 		long id = nextOrderId ();
 		if ( ! books.containsKey ( ticker ) ) {
@@ -91,7 +91,7 @@ public class Exchange {
 		return insertOrder ( instrument , FixedPrice.ZERO , quantity , Order.Side.SELL , orderId , Order.OrderType.MARKET );
 	}
 
-	public synchronized int cancel ( long exchangeId ) {
+	public int cancel ( long exchangeId ) {
 		if ( ! allOrders.containsKey ( exchangeId ) ) {
 			throw new IllegalArgumentException ( "Unknown exchange id " + exchangeId );
 		}
@@ -103,7 +103,7 @@ public class Exchange {
 		return book.cancelOrder ( order );
 	}
 
-	public synchronized Book book ( String instrument ) {
+	public Book book ( String instrument ) {
 		if ( ! books.containsKey ( instrument ) ) {
 			throw new IllegalArgumentException ( "Unknown order id with ticker " + instrument );
 		}
@@ -111,7 +111,7 @@ public class Exchange {
 		return book.book ();
 	}
 
-	public synchronized Order getOrder ( long exchangeId ) {
+	public Order getOrder ( long exchangeId ) {
 		if ( ! allOrders.containsKey ( exchangeId ) ) {
 			throw new IllegalArgumentException ( "Unknown exchange id " + exchangeId );
 		}
@@ -123,7 +123,7 @@ public class Exchange {
 		return order;
 	}
 
-	public synchronized OrderBook orderBook ( String ticker ) {
+	public OrderBook orderBook ( String ticker ) {
 		if ( ! books.containsKey ( ticker ) )
 			throw new RuntimeException ( ticker + " not found in the exchange order book" );
 		return books.get ( ticker );

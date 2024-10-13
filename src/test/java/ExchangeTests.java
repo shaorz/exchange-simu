@@ -10,7 +10,6 @@ import org.rogersf.locking.Exchange;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import static java.lang.Thread.sleep;
@@ -29,30 +28,34 @@ public class ExchangeTests {
 				public void run () {
 					Broker b = new Broker ( incomingOrders , "Broker" + index );
 					if ( index % 2 == 0 ) {
-						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
-							b.buy ( "test" , new FixedPrice ( 100 + new Random ().nextDouble () * 10 ) , 100 , "testOrder" + index );
+						for ( int orderC = 0 ; orderC < 5_0 ; orderC += 10 ) {
+							System.out.println ( "Buying from broker: " + index );
+							b.buy ( "test" , new FixedPrice ( 100 + index % NonLockingExchangeTests.BROKER_COUNT * 10 ) , 100 , "testOrder" + index );
 						}
-						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
+						for ( int orderC = 0 ; orderC < 5_0 ; orderC += 10 ) {
+							System.out.println ( "Selling from broker: " + index );
 							b.marketSell ( "test" , 100 , "testSellMarketOrder" + index );
 						}
 					} else {
-						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
+						for ( int orderC = 0 ; orderC < 5_0 ; orderC += 10 ) {
+							System.out.println ( "Selling from broker: " + index );
 							b.marketSell ( "test" , 100 , "testSellMarketOrder" + index );
 						}
-						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
-							b.buy ( "test" , new FixedPrice ( 100 + new Random ().nextDouble () * 10 ) , 100 , "testOrder" + index );
+						for ( int orderC = 0 ; orderC < 5_0 ; orderC += 10 ) {
+							System.out.println ( "Selling from broker: " + index );
+							b.buy ( "test" , new FixedPrice ( 100 + index % NonLockingExchangeTests.BROKER_COUNT * 10 ) , 100 , "testOrder" + index );
 						}
 					}
 				}
 			} ).start ();
 		}
-
+		sleep ( 10_000 );
 		List < ExchangeListener > listeners = new ArrayList <> ();
 		TestExchangeListener listener = new TestExchangeListener ();
 		listeners.add ( listener );
 		Exchange testExchange = new Exchange ( listeners , incomingOrders );
-		testExchange.start ();
 		long start = System.currentTimeMillis ();
+		testExchange.start ();
 		while ( testExchange.nextOrderId () <= 100_000 )
 			sleep ( 10 );
 		long end = System.currentTimeMillis ();

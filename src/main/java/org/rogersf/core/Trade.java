@@ -11,5 +11,16 @@ public class Trade {
 		this.quantity = quantity;
 		this.aggressor = aggressor;
 		this.opposite = opposite;
+		System.out.println ( "trade has been  made @ " + price );
+	}
+
+	@Override
+	public String toString () {
+		return "Trade{" +
+				"price=" + price +
+				", quantity=" + quantity +
+				", aggressor=" + aggressor.exchangeId +
+				", opposite=" + opposite.exchangeId +
+				'}';
 	}
 }

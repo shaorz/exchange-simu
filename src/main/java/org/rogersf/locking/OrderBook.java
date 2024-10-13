@@ -31,6 +31,7 @@ public class OrderBook {
 				bestAsk.fill ( qty );
 				Trade t = new Trade ( price , qty , aggressor , opposite );
 
+
 				if ( bestBid.remainingQuantity () == 0 )
 					bids.removeOrder ( bestBid );
 
@@ -67,7 +68,7 @@ public class OrderBook {
 		this.ticker = ticker;
 	}
 
-	public synchronized void insertOrder ( Order order ) {
+	public void insertOrder ( Order order ) {
 		if ( ! order.ticker.equals ( this.ticker ) ) {
 			return;
 		}
@@ -80,7 +81,7 @@ public class OrderBook {
 		matchOrders ( order.side );
 	}
 
-	public synchronized int cancelOrder ( Order order ) {
+	public int cancelOrder ( Order order ) {
 		if ( ! order.ticker.equals ( this.ticker ) ) {
 			return - 1;
 		}
@@ -98,7 +99,7 @@ public class OrderBook {
 		}
 	}
 
-	public synchronized Book book () {
+	public Book book () {
 		Book ret = new Book ();
 		ret.bids = new ArrayList <> ( bids.size () );
 		ret.asks = new ArrayList <> ( asks.size () );

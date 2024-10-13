@@ -13,9 +13,10 @@ import org.rogersf.nolocking.NonLockingExchange;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static java.lang.Thread.sleep;
 
 public class NonLockingExchangeTests {
 
@@ -42,7 +43,6 @@ public class NonLockingExchangeTests {
 		TestExchangeListener listener = new TestExchangeListener ();
 		listeners.add ( listener );
 		NonLockingExchange testExchange = new NonLockingExchange ( listeners );
-
 		disruptor.handleEventsWith ( testExchange );
 		disruptor.start ();
 
@@ -56,23 +56,30 @@ public class NonLockingExchangeTests {
 				public void run () {
 					NonLockingBroker b = new NonLockingBroker ( ringBuffer , "Broker" + index );
 					if ( index % 2 == 0 ) {
-						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
-							b.buy ( "test" , new FixedPrice ( 100 + new Random ().nextDouble () * 10 ) , 100 , "testOrder" + index );
+						for ( int orderC = 0 ; orderC < 50 ; orderC += 10 ) {
+							System.out.println ( "Buying from broker: " + index );
+							b.buy ( "test" , new FixedPrice ( 100 + index % NonLockingExchangeTests.BROKER_COUNT * 10 ) , 100 , "testOrder" + index );
 						}
-						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
-							b.marketSell ( "test" , 100 , "testSellMarketOrder" + index );
+						for ( int orderC = 0 ; orderC < 50 ; orderC += 10 ) {
+							System.out.println ( "Selling from broker: " + index );
+							b.sell ( "test" , new FixedPrice ( 100 + index % NonLockingExchangeTests.BROKER_COUNT * 10 ) , 100 , "testSellOrder" + index );
 						}
 					} else {
-						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
-							b.marketSell ( "test" , 100 , "testSellMarketOrder" + index );
+						for ( int orderC = 0 ; orderC < 50 ; orderC += 10 ) {
+							System.out.println ( "Selling from broker: " + index );
+							b.sell ( "test" , new FixedPrice ( 100 + index % NonLockingExchangeTests.BROKER_COUNT * 10 ) , 100 , "testSellOrder" + index );
 						}
-						for ( int orderC = 0 ; orderC < 5_000 ; orderC += 10 ) {
-							b.buy ( "test" , new FixedPrice ( 100 + new Random ().nextDouble () * 10 ) , 100 , "testOrder" + index );
+						for ( int orderC = 0 ; orderC < 50 ; orderC += 10 ) {
+							System.out.println ( "Buying from broker: " + index );
+							b.buy ( "test" , new FixedPrice ( 100 + index % NonLockingExchangeTests.BROKER_COUNT * 10 ) , 100 , "testOrder" + index );
 						}
 					}
 				}
 			} ).start ();
 		}
+
+		sleep ( 10_000 );
+
 //		ExecutorService executorService = Executors.newFixedThreadPool ( 10 );
 //		CountDownLatch latch = new CountDownLatch ( 10 );
 //		// Submit 10 tasks to the thread pool
@@ -96,12 +103,12 @@ public class NonLockingExchangeTests {
 //		// Shut down the thread pool
 //		executorService.shutdown ();
 		while ( testExchange.nextOrderId () <= 100_000 ) {
-			Thread.sleep ( 10 );
+			sleep ( 10 );
 		}
 		long end = System.currentTimeMillis ();
 		System.out.println ( " 1M buy and sell was matched within " + ( end - start ) + " milli seconds in disruptor" );
 
-		Thread.sleep ( 10000 );
+		sleep ( 10000 );
 
 	}
 
